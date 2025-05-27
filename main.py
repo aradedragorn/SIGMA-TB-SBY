@@ -73,7 +73,15 @@ with tabs[0]:
             vmax=vmax
         ).to_step(unique_vals)
 
-        m1 = folium.Map(location=center, zoom_start=10, tiles="Esri NatGeoWorldMap")
+        m1 = folium.Map(location=center, zoom_start=10, tiles=None)
+        folium.TileLayer(
+            tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+            attr='Google Hybrid',
+            name='Google Hybrid',
+            overlay=False,
+            control=True
+        ).add_to(m1)
+
 
         def style_function(feature):
             kecamatan = feature["properties"]["NAMOBJ"]
@@ -83,7 +91,7 @@ with tabs[0]:
 
             return {
                 "fillColor": color,
-                "color": "black",
+                "color": "white",
                 "weight": 0.5,
                 "fillOpacity": 0.7,
             }
@@ -105,7 +113,15 @@ with tabs[0]:
         return m1, colormap
 
     def map2(heatmap_model):
-        m2 = folium.Map(location=center, zoom_start=10, tiles="Esri NatGeoWorldMap")
+        m2 = folium.Map(location=center, zoom_start=10, tiles=None)
+        folium.TileLayer(
+            tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+            attr='Google Hybrid',
+            name='Google Hybrid',
+            overlay=False,
+            control=True
+        ).add_to(m2)
+
 
         heat_data = [
             [point.y, point.x, weight]
@@ -118,7 +134,7 @@ with tabs[0]:
             gdf_choro,
             style_function=lambda feature: {
                 "fillColor": "#ffffff",
-                "color": "black",
+                "color": "white",
                 "weight": 1,
                 "fillOpacity": 0.01
             },
@@ -151,7 +167,12 @@ with tabs[0]:
                 colors = ['#4B0055', '#813080', '#B266A3', '#D98CB3', '#F2C6D9']
                 colormap = LinearColormap(colors, vmin=vmin, vmax=vmax).to_step(10)
                 colormap.caption = f"Prediksi TBC ({prediksi_field})"
-                colormap_html = colormap._repr_html_()
+                colormap_html = colormap._repr_html_()\
+                    .replace("<div style=", "<div style='color:white; font-weight:bold;'")\
+                    .replace("transform: rotate(270deg);", "transform: rotate(0deg);")\
+                    .replace("fill: black", "fill: white")\
+                    .replace("color: black", "color: white")
+
                 st.markdown(
                     f"""
                     <div style='margin-top: 200px; margin-left: -30px; transform: rotate(90deg); transform-origin: left top;'>
@@ -188,7 +209,10 @@ with tabs[0]:
                     vmax=vmax,
                     caption=f"Heatmap TBC : ({heatmap_model})"
                 )
-                colormap_html = colormap._repr_html_()
+                colormap_html = colormap._repr_html_()\
+                    .replace("<div style=", "<div style='color:white; font-weight:bold;'")\
+                    .replace("fill: black", "fill: white")\
+                    .replace("color: black", "color: white")
                 st.markdown(
                     f"""
                     <div style='margin-top: 200px; margin-left: -30px; transform: rotate(90deg); transform-origin: left top;'>
@@ -198,7 +222,6 @@ with tabs[0]:
                     unsafe_allow_html=True
                 )
 
-# ================================
 # ================================
 # Tab 2: Statistik Model
 # ================================
@@ -289,30 +312,25 @@ with tabs[1]:
 
             col.pyplot(fig)
 
-
 # ================================
 # Tab 3: Data Lengkap
 # ================================
 with tabs[2]:
     st.markdown("### 📋 Data Lengkap Prediksi dan Error")
 
-    # Ubah nama kolom agar lebih deskriptif
     df_renamed = df.rename(columns={
         "NB_Pred": "Prediksi RBN",
         "RF_Pred": "Prediksi Random Forest",
         "XGB_Pred": "Prediksi XGBoost"
     })
 
-    # Fungsi highlight berdasarkan nama kolom baru
     def highlight_predictions(s):
         color_map = {
-            'Prediksi RBN': 'background-color: #fc8d59',          # oranye-merah
-            'Prediksi Random Forest': 'background-color: #91bfdb',# biru langit
-            'Prediksi XGBoost': 'background-color: #d05ce3'       # ungu cerah
+            'Prediksi RBN': 'background-color: #fc8d59',
+            'Prediksi Random Forest': 'background-color: #91bfdb',
+            'Prediksi XGBoost': 'background-color: #d05ce3'
         }
         return [color_map.get(col, '') for col in s.index]
 
     with st.expander("📁 Klik untuk menampilkan seluruh data"):
         st.dataframe(df_renamed.style.apply(highlight_predictions, axis=1))
-
-
